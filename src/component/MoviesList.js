@@ -1,4 +1,4 @@
-import Movie from "./Movies/Movie";
+import Movie from "./Movies";
 import classes from './MoviesList.module.css';
 
 const MoviesList = (props) => {
