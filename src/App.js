@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import AddMovie from './component/AddMovie';
+import AddMovie from "./component/AddMovie";
 
 import MoviesList from "./component/MoviesList";
 import "./App.css";
@@ -7,69 +7,99 @@ import "./App.css";
 function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, seError] = useState(null);
+  const [error, setError] = useState(null);
 
-  const fetchMoviesHanlder = useCallback(() => {
+  // Promises written in then approach
+
+  // const fetchMoviesHanlder = useCallback(() => {
+  //   setIsLoading(true);
+  //   seError(null); // reseting the previous errors
+
+  //   fetch(
+  //     "https://learning-http-req-in-react-default-rtdb.firebaseio.com/movies.json"
+  //   ) // firebase link
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       const trandformedMovies = data.results.map((movieData) => {
+  //         return {
+  //           id: movieData.episode_id,
+  //           title: movieData.title,
+  //           openingText: movieData.opening_crawl,
+  //           release: movieData.release_date,
+  //         };
+  //       });
+
+  //       setMovies(trandformedMovies);
+  //       setIsLoading(false);
+  //     })
+  //     .catch((err) => {
+  //       seError(err.message);
+  //       setIsLoading(false);
+  //     });
+  // }, []);
+
+  // Promises can be written in another way async and await
+  const fetchMoviesHandler = useCallback(async () => {
     setIsLoading(true);
-    seError(null); // reseting the previous errors
+    setError(null);
+    try {
+      const response = await fetch(
+        "https://learning-http-req-in-react-default-rtdb.firebaseio.com/movies.json"
+      );
 
-    fetch("https://learning-http-req-in-react-default-rtdb.firebaseio.com/movies.json")
-      .then((response) => response.json())
-      .then((data) => {
-        const trandformedMovies = data.results.map((movieData) => {
-          return {
-            id: movieData.episode_id,
-            title: movieData.title,
-            openingText: movieData.opening_crawl,
-            release: movieData.release_date,
-          };
+      if (!response.ok) {
+        throw new Error("Something went wrong!");
+      }
+
+      const data = await response.json();
+
+      const loadedMovies = [];
+
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          release: data[key].releaseDate,
         });
+      }
 
-        setMovies(trandformedMovies);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        seError(err.message);
-        setIsLoading(false);
-      });
+      // const transformedMovies = data.results.map((movieData) => {
+      //   return {
+      //     id: movieData.episode_id,
+      //     title: movieData.title,
+      //     openingText: movieData.opening_crawl,
+      //     releaseDate: movieData.release_date,
+      //   };
+      // });
+      setMovies(loadedMovies);
+    } catch (err) {
+      setError(err.message);
+    }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    fetchMoviesHanlder();
-  }, [fetchMoviesHanlder]);
+    fetchMoviesHandler();
+  }, [fetchMoviesHandler]);
 
-  // Promises can be written in another way async and await
-  // const fetchMoviesHanlder = async () => {
-  //   setIsLoading(true);
-  //   seError(null); // reseting the previous error
+  const addMovieHandler = async (movie) => {
+    // async in promise
+    const response = await fetch(
+      "https://learning-http-req-in-react-default-rtdb.firebaseio.com/movies.json",
+      {
+        method: "POST",
+        body: JSON.stringify(movie), // convert to json format
+        headers: {
+          // not required for firebase backend
+          "content-type": "application/json",
+        },
+      }
+    );
 
-  //   try {
-  //     const response = await fetch("https://swapi.dev/api/films");
-
-  //     if (!response.ok) {
-  //       throw new Error("Something went wrong!");
-  //     }
-  //     const data = await response.json();
-  //     const trandformedMovies = await data.results.map((movieData) => {
-  //       return {
-  //         id: movieData.episode_id,
-  //         title: movieData.title,
-  //         openingText: movieData.opening_crawl,
-  //         release: movieData.release_date,
-  //       };
-  //     });
-
-  //     setMovies(trandformedMovies);
-  //     setIsLoading(false);
-  //   } catch (err) {
-  //     seError(err.message);
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  const addMovieHandler = movie => {
-    console.log(movie);
-  }
+    const data = await response.json();
+    console.log(data);
+  };
 
   let content = <p>Found no movies!</p>;
   if (movies.length > 0) {
@@ -85,10 +115,10 @@ function App() {
   return (
     <React.Fragment>
       <section>
-        <AddMovie onAddMovie={addMovieHandler}/>
+        <AddMovie onAddMovie={addMovieHandler} />
       </section>
       <section>
-        <button onClick={fetchMoviesHanlder}>Fetch Movies</button>
+        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
       <section>
         {/* {!isLoading && movies.length > 0 && <MoviesList movies={movies} />}
