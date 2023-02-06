@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import AddMovie from './component/AddMovie';
 
 import MoviesList from "./component/MoviesList";
 import "./App.css";
@@ -8,11 +9,11 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, seError] = useState(null);
 
-  const fetchMoviesHanlder = () => {
+  const fetchMoviesHanlder = useCallback(() => {
     setIsLoading(true);
     seError(null); // reseting the previous errors
 
-    fetch("https://swapi.dev/api/film")
+    fetch("https://learning-http-req-in-react-default-rtdb.firebaseio.com/movies.json")
       .then((response) => response.json())
       .then((data) => {
         const trandformedMovies = data.results.map((movieData) => {
@@ -31,7 +32,11 @@ function App() {
         seError(err.message);
         setIsLoading(false);
       });
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchMoviesHanlder();
+  }, [fetchMoviesHanlder]);
 
   // Promises can be written in another way async and await
   // const fetchMoviesHanlder = async () => {
@@ -62,7 +67,10 @@ function App() {
   //   }
   // };
 
-  
+  const addMovieHandler = movie => {
+    console.log(movie);
+  }
+
   let content = <p>Found no movies!</p>;
   if (movies.length > 0) {
     content = <MoviesList movies={movies} />;
@@ -71,11 +79,14 @@ function App() {
     content = <p>{error}</p>;
   }
   if (isLoading) {
-    content= <p>Loading...</p>;
+    content = <p>Loading...</p>;
   }
 
   return (
     <React.Fragment>
+      <section>
+        <AddMovie onAddMovie={addMovieHandler}/>
+      </section>
       <section>
         <button onClick={fetchMoviesHanlder}>Fetch Movies</button>
       </section>
